@@ -8,8 +8,8 @@ import re
 from collections.abc import Iterable
 from typing import Self
 
-__all__ = ("Hopsu",)
-__version__ = "0.8.3"
+__all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
+__version__ = "0.8.4"
 
 
 class HopsuError(Exception):
