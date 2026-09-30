@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 
 
 class HopsuError(Exception):
@@ -158,7 +158,7 @@ class Hopsu:
 
     def output(self, /) -> Self:
         """输出"""
-        print(chr(self.pop()))
+        print(chr(self.pop()), end="")
         return self
 
     def clear_input_buffer(self, /) -> Self:
@@ -171,42 +171,45 @@ class Hopsu:
         index = 0
         LENGTH = len(tokens)
 
-        while index < LENGTH:
-            token = tokens[index]
+        try:
+            while index < LENGTH:
+                token = tokens[index]
 
-            match token:
-                # 堆栈
-                case _ if self.digit.fullmatch(token):
-                    self.push(int(token))
-                # 加法
-                case "+":
-                    self.add()
-                # 减法
-                case "-":
-                    self.sub()
-                case "^":
-                    self.pop()
-                case "?":
-                    self.cond_pop()
-                case ",":
-                    self.input()
-                case ".":
-                    self.output()
-                case "~":
-                    index += 1
-                case "(":
-                    if len(self.stack) == jump[index][1]:
-                        index = jump[index][0]
-                case ")":
-                    if len(self.stack) != jump[index][1]:
-                        index = jump[index][0]
+                match token:
+                    # 堆栈
+                    case _ if self.digit.fullmatch(token):
+                        self.push(int(token))
+                    # 加法
+                    case "+":
+                        self.add()
+                    # 减法
+                    case "-":
+                        self.sub()
+                    case "^":
+                        self.pop()
+                    case "?":
+                        self.cond_pop()
+                    case ",":
+                        self.input()
+                    case ".":
+                        self.output()
+                    case "~":
+                        index += 1
+                    case "(":
+                        if len(self.stack) == jump[index][1]:
+                            index = jump[index][0]
+                    case ")":
+                        if len(self.stack) != jump[index][1]:
+                            index = jump[index][0]
 
-            index += 1
+                index += 1
+        except HopsuStackError as e:
+            raise HopsuStackError(f"{e} (index {index})") from e
 
         self.clear_input_buffer()
 
     def clear(self, /) -> Self:
-        self.input_buffer.clear()
+        self.clear_input_buffer()
         self.stack.clear()
         return self
 
