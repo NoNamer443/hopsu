@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.8.4"
+__version__ = "0.9.0"
 
 
 class HopsuError(Exception):
@@ -29,7 +29,6 @@ class Hopsu:
         "__stack",
         "__max_size",
         "__input_buffer",
-        "__output_buffer",
         "__weakref__"
     )
 
@@ -45,7 +44,6 @@ class Hopsu:
         self.__stack = []
         self.__max_size = max_size
         self.__input_buffer: list[int] = []
-        self.__output_buffer: list[int] = []
 
     @property
     def stack(self, /) -> list[int]:
@@ -58,10 +56,6 @@ class Hopsu:
     @property
     def input_buffer(self, /) -> list[int]:
         return self.__input_buffer
-
-    @property
-    def output_buffer(self, /) -> list[int]:
-        return self.__output_buffer
 
     def check_match(self, /, tokens: Iterable[str]) -> dict[int, tuple[int, int]]:
         """检查语法，顺便返回转跳表"""
@@ -152,7 +146,6 @@ class Hopsu:
 
     def input(self, /) -> Self:
         if not self.input_buffer:
-            self.show_output() # 清空输出缓冲区
             try:
                 self.input_buffer.extend(input().encode())
                 self.input_buffer.append(10) # "\n"
@@ -164,16 +157,8 @@ class Hopsu:
         return self
 
     def output(self, /) -> Self:
-        """添加到缓冲区"""
-        self.output_buffer.append(self.pop())
-        if len(self.output_buffer) >= 128:
-            self.show_output()
-        return self
-
-    def show_output(self, /) -> Self:
-        """输出缓冲区，真正的输出"""
-        print("".join(map(chr, self.output_buffer)), end="")
-        self.output_buffer.clear()
+        """输出"""
+        print(chr(self.pop()))
         return self
 
     def clear_input_buffer(self, /) -> Self:
@@ -218,12 +203,10 @@ class Hopsu:
 
             index += 1
 
-        self.show_output()
         self.clear_input_buffer()
 
     def clear(self, /) -> Self:
         self.input_buffer.clear()
-        self.output_buffer.clear()
         self.stack.clear()
         return self
 
