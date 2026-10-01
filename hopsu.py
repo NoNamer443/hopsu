@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 
 class HopsuError(Exception):
@@ -23,7 +23,18 @@ class HopsuSyntaxError(HopsuError):
 
 
 class Hopsu:
-    """Hopsu语言的解释器"""
+    """Hopsu语言的解释器
+    整个语言在一个栈上
+    N（数字）：压栈
+    ^：弹栈
+    ?：当栈顶为0时弹栈
+    +：弹栈并将现在的栈顶加上原栈顶值
+    -：弹栈并将现在的栈顶减去原栈顶值
+    ,：输入
+    .：输出
+    ~ N ( )：当栈高不为N时循环
+    由于作者的懒惰，每两个token之间必须有空白字符，以便split
+    """
 
     __slots__ = (
         "__stack",
@@ -36,7 +47,7 @@ class Hopsu:
     digit: re.Pattern = re.compile(r"[0-9]+")
 
     def __init__(self, /, max_size: int = 30000) -> None:
-        if  not isinstance(max_size, int):
+        if not isinstance(max_size, int):
             raise TypeError(f"max_size must be int, not {type(max_size).__qualname__}")
         if max_size <= 0:
             raise ValueError("max_size <= 0")
@@ -83,7 +94,7 @@ class Hopsu:
                     raise HopsuSyntaxError(f'it must be a digit after "~" (index {i})')
                 case 2 if token == "(":
                     loop_keyword = 0
-                    assert target is not None, "" # 确保target不是None，同时让Pylance闭嘴
+                    assert target is not None, "target is None" # 确保target不是None，同时让Pylance闭嘴
                     loop.append((i, target))
                 case 2:
                     raise HopsuSyntaxError(f'it must be "(" after "~" and a digit (index {i})')
@@ -111,7 +122,7 @@ class Hopsu:
 
     def push(self, /, value: int) -> Self:
         """压栈"""
-        if self.max_size and len(self.stack) < self.max_size:
+        if len(self.stack) < self.max_size:
             self.stack.append(value % 256)
         else:
             raise HopsuStackError("stack was full")
@@ -176,13 +187,10 @@ class Hopsu:
                 token = tokens[index]
 
                 match token:
-                    # 堆栈
                     case _ if self.digit.fullmatch(token):
                         self.push(int(token))
-                    # 加法
                     case "+":
                         self.add()
-                    # 减法
                     case "-":
                         self.sub()
                     case "^":
