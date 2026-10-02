@@ -33,6 +33,7 @@ class Hopsu:
     ,：输入
     .：输出
     ~ N ( )：当栈高不为N时循环
+    #到行尾：注释
     由于作者的懒惰，每两个token之间必须有空白字符，以便split
     """
 
@@ -176,7 +177,7 @@ class Hopsu:
         return self
 
     def run(self, /, code: str) -> None:
-        tokens = code.split()
+        tokens = "\n".join(line.split("#", 1)[0] for line in code.splitlines()).split()
         jump = self.check_match(tokens)
         index = 0
         LENGTH = len(tokens)
