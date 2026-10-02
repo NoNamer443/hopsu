@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.3"
+__version__ = "0.9.4"
 
 
 class HopsuError(Exception):
@@ -54,7 +54,7 @@ class Hopsu:
 
         self.__stack = bytearray()
         self.__max_size = max_size
-        self.__input_buffer: list[int] = []
+        self.__input_buffer: bytearray()
 
     @property
     def stack(self, /) -> bytearray:
@@ -65,7 +65,7 @@ class Hopsu:
         return self.__max_size
 
     @property
-    def input_buffer(self, /) -> list[int]:
+    def input_buffer(self, /) -> bytearray:
         return self.__input_buffer
 
     def check_match(self, /, tokens: Iterable[str]) -> dict[int, tuple[int, int]]:
