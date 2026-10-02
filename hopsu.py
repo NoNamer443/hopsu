@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.2"
+__version__ = "0.9.3"
 
 
 class HopsuError(Exception):
@@ -52,12 +52,12 @@ class Hopsu:
         if max_size <= 0:
             raise ValueError("max_size <= 0")
 
-        self.__stack = []
+        self.__stack = bytearray()
         self.__max_size = max_size
         self.__input_buffer: list[int] = []
 
     @property
-    def stack(self, /) -> list[int]:
+    def stack(self, /) -> bytearray:
         return self.__stack
 
     @property
@@ -144,7 +144,6 @@ class Hopsu:
         """弹栈并将现在的栈顶值加上原栈顶值"""
         value = self.pop()
         value += self.pop()
-        value %= 256
         self.push(value)
         return self
 
