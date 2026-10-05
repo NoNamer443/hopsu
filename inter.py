@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 import sys
 import hopsu
-from _util import red, kinds
+try:
+    from _util import red, KINDS
+except ImportError:
+    from ._util import red, KINDS
 
 __all__ = ("main",)
-
-
-
 
 
 def main() -> None:
@@ -26,7 +26,7 @@ def main() -> None:
     try:
         inter.run(code)
     except hopsu.HopsuError as e:
-        print(red(f"HopsuError: {kinds.get(type(e), "other")}: {e}"), file=sys.stderr)
+        print(red(f"HopsuError: {KINDS.get(type(e), "other")}: {e}"), file=sys.stderr)
         sys.exit(1)
 
 
