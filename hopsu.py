@@ -5,11 +5,11 @@ HopsuError：语言报错
 """
 
 import re
-from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.7"
+__version__ = "0.9.7b"
 
 def isnumber(s: str, /) -> bool:
     """判断字符串是否仅包含ASCII数字"""
@@ -74,52 +74,43 @@ class Hopsu:
     def input_buffer(self, /) -> bytearray:
         return self.__input_buffer
 
-    def check_match(self, /, tokens: Iterable[str]) -> dict[int, tuple[int, int]]:
+    def check_match(self, /, tokens: Sequence[str]) -> dict[int, tuple[int, int]]:
         """检查语法，顺便返回转跳表"""
         loop: list[tuple[int, int]] = [] # 记录“(”的索引
-        loop_keyword = 0 # 状态机，0未默认值，1为“~”，2为“~ X”
         jump: dict[int, tuple[int, int]] = {} # {转跳前序列: (转跳后序列, 转跳条件)}
         target: None | int = None # 循环条件，为run时转跳提供方便
+        skip = 0
 
         for i, token in enumerate(tokens):
+            if skip:
+                skip -= 1
+                continue
+
             # 确保token有效
             if not self.rule.fullmatch(token):
                 raise HopsuSyntaxError(f"{token!r} is not a right token (index {i})")
 
-            # 匹配~ X (
-            match loop_keyword:
-                case 0 if token == "~":
-                    loop_keyword += 1
-                case 1 if isnumber(token):
-                    # 确保结束条件理论可达成
-                    if int(token) > self.max_size:
-                        raise HopsuSyntaxError(f"unachievable stack height: {token} (index {i})")
-                    target = int(token)
-                    loop_keyword += 1
-                case 1:
-                    raise HopsuSyntaxError(f'it must be a digit after "~" (index {i})')
-                case 2 if token == "(":
-                    loop_keyword = 0
-                    assert target is not None, "target is None" # 确保target不是None，同时让Pylance闭嘴
-                    loop.append((i, target))
-                case 2:
-                    raise HopsuSyntaxError(f'it must be "(" after "~" and a digit (index {i})')
-
-            # 匹配右括号
             match token:
+                # 匹配循环结构
+                case "~":
+                    if i + 1 >= len(tokens):
+                        raise HopsuSyntaxError('it must be a digit after "~" (index -1)')
+                    if i + 2 >= len(tokens):
+                        raise HopsuSyntaxError('it must be "(" after "~" and a digit (index -1)')
+                    if not isnumber(tokens[i + 1]):
+                        raise HopsuSyntaxError(f'it must be a digit after "~" (index {i})')
+                    if tokens[i + 2] != "(":
+                        raise HopsuSyntaxError(f'it must be "(" after "~" and a digit (index {i})')
+
+                    loop.append((i + 2, int(tokens[i + 1])))
+                    skip += 2
+                # 匹配右括号
                 case ")" if loop:
                     left, target = loop.pop()
                     jump[left] = (i, target)
                     jump[i] = (left, target)
                 case ")":
                     raise HopsuSyntaxError(f'unmatched ")" (index {i})')
-
-        # 检查循环结构
-        match loop_keyword:
-            case 1:
-                raise HopsuSyntaxError('it must be a digit after "~" (index -1)')
-            case 2:
-                raise HopsuSyntaxError('it must be "(" after "~" and a digit (index -1)')
         # 检查括号配对
         if loop:
             raise HopsuSyntaxError(f'unmatched "(" (index {", ".join(str(l) for l, _ in loop)})')
