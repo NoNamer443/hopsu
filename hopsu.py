@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.6"
+__version__ = "0.9.7"
 
 def isnumber(s: str, /) -> bool:
     """判断字符串是否仅包含ASCII数字"""
@@ -122,7 +122,7 @@ class Hopsu:
                 raise HopsuSyntaxError('it must be "(" after "~" and a digit (index -1)')
         # 检查括号配对
         if loop:
-            raise HopsuSyntaxError(f'unmatched "(" (index {", ".join(map(str, loop))})')
+            raise HopsuSyntaxError(f'unmatched "(" (index {", ".join(str(l) for l, _ in loop)})')
 
         return jump
 
