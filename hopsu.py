@@ -9,14 +9,20 @@ from collections.abc import Iterable
 from typing import Self
 
 __all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
-__version__ = "0.9.5"
+__version__ = "0.9.6"
+
+def isnumber(s: str, /) -> bool:
+    """判断字符串是否仅包含ASCII数字"""
+    return s.isascii() and s.isdecimal()
 
 
 class HopsuError(Exception):
     """Hopsu语言层面的错误"""
 
+
 class HopsuStackError(HopsuError):
     """空栈或栈满"""
+
 
 class HopsuSyntaxError(HopsuError):
     """Hopsu语言层面的语法错误"""
@@ -44,8 +50,7 @@ class Hopsu:
         "__weakref__"
     )
 
-    rule: re.Pattern = re.compile(r"([0-9]+|[-+,.()^~?])")
-    digit: re.Pattern = re.compile(r"[0-9]+")
+    rule = re.compile(r"([0-9]+|[-+,.()^~?])")
 
     def __init__(self, /, max_size: int = 30000) -> None:
         if not isinstance(max_size, int):
@@ -85,7 +90,7 @@ class Hopsu:
             match loop_keyword:
                 case 0 if token == "~":
                     loop_keyword += 1
-                case 1 if self.digit.fullmatch(token):
+                case 1 if isnumber(token):
                     # 确保结束条件理论可达成
                     if int(token) > self.max_size:
                         raise HopsuSyntaxError(f"unachievable stack height: {token} (index {i})")
@@ -187,8 +192,6 @@ class Hopsu:
                 token = tokens[index]
 
                 match token:
-                    case _ if self.digit.fullmatch(token):
-                        self.push(int(token))
                     case "+":
                         self.add()
                     case "-":
@@ -209,6 +212,8 @@ class Hopsu:
                     case ")":
                         if len(self.stack) != jump[index][1]:
                             index = jump[index][0]
+                    case _ if isnumber(token):
+                        self.push(int(token))
 
                 index += 1
         except HopsuStackError as e:
@@ -224,6 +229,6 @@ class Hopsu:
 
 if __name__ == "__main__":
     a = Hopsu()
-    a.run("10 33 100 108 114 111 119 32 44 111 108 108 101 72 ~ 0 ( . )")
+    a.run("10 33 100 108 114 111 119 32 44 111 108 108 101 72 ~ 0 ( . ) # 输出“Hello, world!”")
     a.clear()
     a.run(", 10 - ? ~ 0 ( 22 - . , 10 - ? )")
