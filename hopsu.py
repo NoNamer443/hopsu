@@ -27,7 +27,7 @@ def isnumber(s: str, /) -> bool:
 # fmt: off
 class HopsuError(Exception): """Hopsu语言层面的错误"""
 class HopsuStackError(HopsuError): """Hopsu语言关于栈的错误"""
-class HopsuStackOverflowError(HopsuStackError, OverflowError): """栈满"""
+class HopsuStackOverflowError(HopsuStackError): """栈满"""
 class HopsuStackEmptyError(HopsuStackError, LookupError): """空栈"""
 class HopsuSyntaxError(HopsuError, SyntaxError): """Hopsu语言层面的语法错误"""
 # fmt: on
