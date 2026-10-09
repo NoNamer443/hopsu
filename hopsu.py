@@ -4,28 +4,38 @@ Hopsu：语言解释器
 HopsuError：语言报错
 """
 
+from enum import IntEnum
 import re
 from collections.abc import Iterable
 from typing import Self
 
-__all__ = ("Hopsu", "HopsuError", "HopsuStackError", "HopsuSyntaxError")
+__all__ = (
+    "Hopsu",
+    "HopsuError",
+    "HopsuStackError",
+    "HopsuStackOverflowError",
+    "HopsuStackEmptyError",
+    "HopsuSyntaxError",
+)
 __version__ = "0.9.7"
+
 
 def isnumber(s: str, /) -> bool:
     """判断字符串是否仅包含ASCII数字"""
     return s.isascii() and s.isdecimal()
 
+# fmt: off
+class HopsuError(Exception): """Hopsu语言层面的错误"""
+class HopsuStackError(HopsuError): """Hopsu语言关于栈的错误"""
+class HopsuStackOverflowError(HopsuStackError): """栈满"""
+class HopsuStackEmptyError(HopsuStackError, LookupError): """空栈"""
+class HopsuSyntaxError(HopsuError, SyntaxError): """Hopsu语言层面的语法错误"""
+# fmt: on
 
-class HopsuError(Exception):
-    """Hopsu语言层面的错误"""
-
-
-class HopsuStackError(HopsuError):
-    """空栈或栈满"""
-
-
-class HopsuSyntaxError(HopsuError):
-    """Hopsu语言层面的语法错误"""
+class _LoopStage(IntEnum):
+    NONE = 0
+    ENTER_LOOP = 1
+    ENTER_CONDITION = 2
 
 
 class Hopsu:
@@ -43,12 +53,7 @@ class Hopsu:
     由于作者的懒惰，每两个token之间必须有空白字符，以便split
     """
 
-    __slots__ = (
-        "__stack",
-        "__max_size",
-        "__input_buffer",
-        "__weakref__"
-    )
+    __slots__ = ("__stack", "__max_size", "__input_buffer", "__weakref__")
 
     rule = re.compile(r"([0-9]+|[-+,.()^~?])")
 
@@ -76,11 +81,12 @@ class Hopsu:
 
     def check_match(self, /, tokens: Iterable[str]) -> dict[int, tuple[int, int]]:
         """检查语法，顺便返回转跳表"""
-        loop: list[tuple[int, int]] = [] # 记录“(”的索引
-        loop_keyword = 0 # 状态机，0未默认值，1为“~”，2为“~ X”
-        jump: dict[int, tuple[int, int]] = {} # {转跳前序列: (转跳后序列, 转跳条件)}
-        target: None | int = None # 循环条件，为run时转跳提供方便
-
+        loop: list[tuple[int, int]] = []  # 记录“(”的索引
+        # 状态机，0为默认值，1为“~”，2为“~ X”
+        loop_keyword: _LoopStage = _LoopStage.NONE
+        jump: dict[int, tuple[int, int]] = {}  # {转跳前序列: (转跳后序列, 转跳条件)}
+        target: None | int = None  # 循环条件，为run时转跳提供方便
+        
         for i, token in enumerate(tokens):
             # 确保token有效
             if not self.rule.fullmatch(token):
@@ -88,21 +94,22 @@ class Hopsu:
 
             # 匹配~ X (
             match loop_keyword:
-                case 0 if token == "~":
-                    loop_keyword += 1
-                case 1 if isnumber(token):
+                case _LoopStage.NONE if token == "~":
+                    loop_keyword = _LoopStage.ENTER_LOOP
+                case _LoopStage.ENTER_LOOP if isnumber(token):
                     # 确保结束条件理论可达成
                     if int(token) > self.max_size:
                         raise HopsuSyntaxError(f"unachievable stack height: {token} (index {i})")
                     target = int(token)
-                    loop_keyword += 1
-                case 1:
+                    loop_keyword = _LoopStage.ENTER_CONDITION
+                case _LoopStage.ENTER_LOOP:
                     raise HopsuSyntaxError(f'it must be a digit after "~" (index {i})')
-                case 2 if token == "(":
-                    loop_keyword = 0
-                    assert target is not None, "target is None" # 确保target不是None，同时让Pylance闭嘴
+                case _LoopStage.ENTER_CONDITION if token == "(":
+                    loop_keyword = _LoopStage.NONE
+                    # 确保target不是None，同时让Pylance闭嘴
+                    assert target is not None, "target is None"
                     loop.append((i, target))
-                case 2:
+                case _LoopStage.ENTER_CONDITION:
                     raise HopsuSyntaxError(f'it must be "(" after "~" and a digit (index {i})')
 
             # 匹配右括号
@@ -116,9 +123,9 @@ class Hopsu:
 
         # 检查循环结构
         match loop_keyword:
-            case 1:
+            case _LoopStage.ENTER_LOOP:
                 raise HopsuSyntaxError('it must be a digit after "~" (index -1)')
-            case 2:
+            case _LoopStage.ENTER_CONDITION:
                 raise HopsuSyntaxError('it must be "(" after "~" and a digit (index -1)')
         # 检查括号配对
         if loop:
@@ -131,13 +138,13 @@ class Hopsu:
         if len(self.stack) < self.max_size:
             self.stack.append(value % 256)
         else:
-            raise HopsuStackError("stack was full")
+            raise HopsuStackOverflowError("stack was full")
         return self
 
     def pop(self, /) -> int:
         """弹栈"""
         if not self.stack:
-            raise HopsuStackError("stack was empty")
+            raise HopsuStackEmptyError("stack was empty")
         return self.stack.pop()
 
     def cond_pop(self, /) -> Self:
@@ -164,7 +171,7 @@ class Hopsu:
         if not self.input_buffer:
             try:
                 self.input_buffer.extend(input().encode())
-                self.input_buffer.append(10) # "\n"
+                self.input_buffer.append(10)  # "\n"
             except EOFError:
                 self.input_buffer.append(0)
 
@@ -185,10 +192,10 @@ class Hopsu:
         tokens = "\n".join(line.split("#", 1)[0] for line in code.splitlines()).split()
         jump = self.check_match(tokens)
         index = 0
-        LENGTH = len(tokens)
+        length = len(tokens)
 
         try:
-            while index < LENGTH:
+            while index < length:
                 token = tokens[index]
 
                 match token:
@@ -217,7 +224,8 @@ class Hopsu:
 
                 index += 1
         except HopsuStackError as e:
-            raise HopsuStackError(f"{e} (index {index})") from e
+            # e.add_note()
+            raise type(e)(f"{e} (index {index})") from e
 
         self.clear_input_buffer()
 
