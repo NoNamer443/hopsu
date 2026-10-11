@@ -1,7 +1,10 @@
 import sys
 import hopsu
 
-kinds: dict[type[Exception], str] = {hopsu.HopsuStackError: "stack", hopsu.HopsuSyntaxError: "syntax"}
+KINDS: dict[type[Exception], str] = {
+    hopsu.HopsuStackError: "stack",
+    hopsu.HopsuSyntaxError: "syntax",
+}
 
 
 def red(s: str) -> str:
