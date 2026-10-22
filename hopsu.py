@@ -141,11 +141,16 @@ class Hopsu:
             raise HopsuStackOverflowError("stack was full")
         return self
 
-    def pop(self, /) -> int:
-        """弹栈"""
+    def pop_return(self, /) -> int:
+        """返回栈顶的弹栈"""
         if not self.stack:
             raise HopsuStackEmptyError("stack was empty")
         return self.stack.pop()
+
+    def pop(self, /) -> Self:
+        """返回self的弹栈，用于链式调用"""
+        self.pop_return()
+        return self
 
     def cond_pop(self, /) -> Self:
         """当栈顶为0时弹栈"""
@@ -155,15 +160,15 @@ class Hopsu:
 
     def add(self, /) -> Self:
         """弹栈并将现在的栈顶值加上原栈顶值"""
-        value = self.pop()
-        value += self.pop()
+        value = self.pop_return()
+        value += self.pop_return()
         self.push(value)
         return self
 
     def sub(self, /) -> Self:
         """弹栈并将现在的栈顶值减去原栈顶值"""
-        value = self.pop()
-        value = self.pop() - value
+        value = self.pop_return()
+        value = self.pop_return() - value
         self.push(value)
         return self
 
@@ -181,7 +186,7 @@ class Hopsu:
 
     def output(self, /) -> Self:
         """输出"""
-        print(chr(self.pop()), end="")
+        print(chr(self.pop_return()), end="")
         return self
 
     def clear_input_buffer(self, /) -> Self:
@@ -189,7 +194,7 @@ class Hopsu:
         return self
 
     def run(self, /, code: str) -> None:
-        tokens = "\n".join(line.split("#", 1)[0] for line in code.splitlines()).split()
+        tokens = "\n".join(line.split("#", 1)[0] for line in code.splitlines()).split() # 去除注释
         jump = self.check_match(tokens)
         index = 0
         length = len(tokens)
