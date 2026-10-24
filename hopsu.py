@@ -107,7 +107,8 @@ class Hopsu:
                 case _LoopStage.ENTER_CONDITION if token == "(":
                     loop_keyword = _LoopStage.NONE
                     # 确保target不是None，同时让Pylance闭嘴
-                    assert target is not None, "target is None"
+                    if target is None:
+                        raise ValueError("target is None")
                     loop.append((i, target))
                 case _LoopStage.ENTER_CONDITION:
                     raise HopsuSyntaxError(f'it must be "(" after "~" and a digit (index {i})')
@@ -239,9 +240,19 @@ class Hopsu:
         self.stack.clear()
         return self
 
+    def peek(self, /, index: int = -1) -> int:
+        offset = index
+        if offset < 0:
+            # 转成非负数，以便与非负数一起判断
+            offset = ~offset # 注：~N == -N - 1
+        if len(self.stack) < offset + 1:
+            raise HopsuStackError(f"no such item (index {index})")
+        return self.stack[index]
+        
+
 
 if __name__ == "__main__":
     a = Hopsu()
     a.run("10 33 100 108 114 111 119 32 44 111 108 108 101 72 ~ 0 ( . ) # 输出“Hello, world!”")
     a.clear()
-    a.run(", 10 - ? ~ 0 ( 22 - . , 10 - ? )")
+    a.run(", 10 - ? ~ 0 ( 22 - . , 10 - ? ) # 小写转大写")
