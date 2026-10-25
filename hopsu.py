@@ -248,7 +248,9 @@ class Hopsu:
         if len(self.stack) < offset + 1:
             raise HopsuStackError(f"no such item (index {index})")
         return self.stack[index]
-        
+
+    def __len__(self, /) -> int:
+        return len(self.stack)
 
 
 if __name__ == "__main__":
