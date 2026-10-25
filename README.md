@@ -25,3 +25,25 @@
 - `~ N ( )`：当栈高不为N时循环（N为1个正整数）
 - `#`到行尾：注释
 - 由于作者的懒惰，每两个token之间必须有空白字符，以便split
+
+## 使用
+
+正常使用：
+
+```py
+import hopsu
+inter = hopsu.Hopsu()
+inter.run("10 65 ~ 0 ( . )")
+```
+
+链式写法（避免字符串操作，但是要自己写循环）：
+
+```py
+import hopsu
+inter = hopsu.Hopsu()
+inter.push(10).push(65)
+while len(inter) != 0:
+    inter.output()
+```
+
+`inter.py`和`shell.py`是实现出来的简易工具，可以直接使用。
