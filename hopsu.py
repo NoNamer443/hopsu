@@ -19,6 +19,7 @@ __all__ = (
 )
 __version__ = "0.9.8"
 __author__ = "NoNamer443"
+__credits__ = "contributions: BarbTurnip437"
 
 
 def isnumber(s: str, /) -> bool:
