@@ -1,5 +1,6 @@
 import sys
 import hopsu
+
 try:
     from _util import red, KINDS
 except ImportError:
@@ -32,7 +33,10 @@ def main() -> None:
                 try:
                     shell.run(code)
                 except hopsu.HopsuError as e:
-                    print(red(f"HopsuError: {KINDS.get(type(e), "other")}: {e}"), file=sys.stderr)
+                    print(
+                        red(f"HopsuError: {KINDS.get(type(e), "other")}: {e}"),
+                        file=sys.stderr,
+                    )
                 except KeyboardInterrupt:
                     continue
 

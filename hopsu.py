@@ -30,7 +30,9 @@ def isnumber(s: str, /) -> bool:
 class HopsuError(Exception):
     """Hopsu语言层面的错误"""
 
-    def __init__(self, /, *args: object, err_indexes: None | tuple[int, ...] = None) -> None:
+    def __init__(
+        self, /, *args: object, err_indexes: None | tuple[int, ...] = None
+    ) -> None:
         super().__init__(*args)
         self.__err_indexes = err_indexes
 
@@ -105,7 +107,9 @@ class Hopsu:
         for i, token in enumerate(tokens):
             # 确保token有效
             if not self.rule.fullmatch(token):
-                raise HopsuSyntaxError(f"{token!r} is not a right token (index {i})", err_indexes=(i,))
+                raise HopsuSyntaxError(
+                    f"{token!r} is not a right token (index {i})", err_indexes=(i,)
+                )
 
             # 匹配~ X (
             match loop_keyword:
@@ -116,12 +120,14 @@ class Hopsu:
                     if int(token) > self.max_size:
                         raise HopsuSyntaxError(
                             f"unachievable stack height: {token} (index {i})",
-                            err_indexes=(i,)
+                            err_indexes=(i,),
                         )
                     target = int(token)
                     loop_keyword = _LoopStage.ENTER_CONDITION
                 case _LoopStage.ENTER_LOOP:
-                    raise HopsuSyntaxError(f'it must be a digit after "~" (index {i})', err_indexes=(i,))
+                    raise HopsuSyntaxError(
+                        f'it must be a digit after "~" (index {i})', err_indexes=(i,)
+                    )
                 case _LoopStage.ENTER_CONDITION if token == "(":
                     loop_keyword = _LoopStage.NONE
                     # 确保target不是None，同时让Pylance闭嘴
@@ -130,7 +136,7 @@ class Hopsu:
                 case _LoopStage.ENTER_CONDITION:
                     raise HopsuSyntaxError(
                         f'it must be "(" after "~" and a digit (index {i})',
-                        err_indexes=(i,)
+                        err_indexes=(i,),
                     )
 
             # 匹配右括号
@@ -140,23 +146,26 @@ class Hopsu:
                     jump[left] = (i, target)
                     jump[i] = (left, target)
                 case ")":
-                    raise HopsuSyntaxError(f'unmatched ")" (index {i})', err_indexes=(i,))
+                    raise HopsuSyntaxError(
+                        f'unmatched ")" (index {i})', err_indexes=(i,)
+                    )
 
         # 检查循环结构
         match loop_keyword:
             case _LoopStage.ENTER_LOOP:
-                raise HopsuSyntaxError('it must be a digit after "~" (index -1)', err_indexes=(-1,))
+                raise HopsuSyntaxError(
+                    'it must be a digit after "~" (index -1)', err_indexes=(-1,)
+                )
             case _LoopStage.ENTER_CONDITION:
                 raise HopsuSyntaxError(
-                    'it must be "(" after "~" and a digit (index -1)',
-                    err_indexes=(-1,)
+                    'it must be "(" after "~" and a digit (index -1)', err_indexes=(-1,)
                 )
         # 检查括号配对
         if loop:
             err_indexes = tuple(j for j, _ in loop)
             raise HopsuSyntaxError(
                 f'unmatched "(" (index {", ".join(str(j) for j in err_indexes)})',
-                err_indexes=err_indexes
+                err_indexes=err_indexes,
             )
 
         return jump
@@ -279,6 +288,7 @@ class Hopsu:
         return self.stack[index]
 
     def __len__(self, /) -> int:
+        """栈高"""
         return len(self.stack)
 
 

@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import sys
 import hopsu
+
 try:
     from _util import red, KINDS
 except ImportError:
