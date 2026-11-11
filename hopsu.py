@@ -275,7 +275,7 @@ class Hopsu:
             # 转成非负数，以便与非负数一起判断
             offset = ~offset  # 注：~N == -N - 1
         if len(self.stack) < offset + 1:
-            raise HopsuStackError(f"no such item")
+            raise HopsuStackError(f"no such item at stack index {index}")
         return self.stack[index]
 
     def __len__(self, /) -> int:
