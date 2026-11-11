@@ -17,7 +17,7 @@ __all__ = (
     "HopsuStackEmptyError",
     "HopsuSyntaxError",
 )
-__version__ = "0.9.8"
+__version__ = "0.10.0"
 __author__ = "NoNamer443"
 __credits__ = "contributions: BarbTurnip437"
 
@@ -32,11 +32,11 @@ class HopsuError(Exception):
 
     def __init__(self, /, *args: object, err_indexes: None | tuple[int, ...] = None) -> None:
         super().__init__(*args)
-        self.__err_index = err_indexes
+        self.__err_indexes = err_indexes
 
     @property
-    def err_index(self, /) -> None | tuple[int, ...]:
-        return self.__err_index
+    def err_indexes(self, /) -> None | tuple[int, ...]:
+        return self.__err_indexes
 
 
 # fmt: off
