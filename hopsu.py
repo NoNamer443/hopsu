@@ -56,19 +56,7 @@ class _LoopStage(IntEnum):
 
 
 class Hopsu:
-    """Hopsu语言的解释器
-    整个语言在一个栈上
-    N（数字）：压栈
-    ^：弹栈
-    ?：当栈顶为0时弹栈
-    +：弹栈并将现在的栈顶加上原栈顶值
-    -：弹栈并将现在的栈顶减去原栈顶值
-    ,：输入
-    .：输出
-    ~ N ( )：当栈高不为N时循环
-    #到行尾：注释
-    由于作者的懒惰，每两个token之间必须有空白字符，以便split
-    """
+    """Hopsu语言的解释器"""
 
     __slots__ = ("__stack", "__max_size", "__input_buffer", "__weakref__")
 
