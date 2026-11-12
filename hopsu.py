@@ -279,13 +279,10 @@ class Hopsu:
         return self
 
     def peek(self, /, index: int = -1) -> int:
-        offset = index
-        if offset < 0:
-            # 转成非负数，以便与非负数一起判断
-            offset = ~offset  # 注：~N == -N - 1
-        if len(self.stack) < offset + 1:
-            raise HopsuStackError(f"no such item at stack index {index}")
-        return self.stack[index]
+        try:
+            return self.stack[index]
+        except IndexError:
+            raise HopsuStackError(f"no such item at stack index {index}") from None
 
     def __len__(self, /) -> int:
         """栈高"""
