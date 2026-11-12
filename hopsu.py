@@ -17,12 +17,12 @@ __all__ = (
     "HopsuStackEmptyError",
     "HopsuSyntaxError",
 )
-__version__ = "0.10.0"
+__version__ = "0.10.1"
 __author__ = "NoNamer443"
 __credits__ = "contributions: BarbTurnip437"
 
 
-def isnumber(s: str, /) -> bool:
+def is_ascii_digit(s: str, /) -> bool:
     """判断字符串是否仅包含ASCII数字"""
     return s.isascii() and s.isdecimal()
 
@@ -115,7 +115,7 @@ class Hopsu:
             match loop_keyword:
                 case _LoopStage.NONE if token == "~":
                     loop_keyword = _LoopStage.ENTER_LOOP
-                case _LoopStage.ENTER_LOOP if isnumber(token):
+                case _LoopStage.ENTER_LOOP if is_ascii_digit(token):
                     # 确保结束条件理论可达成
                     if int(token) > self.max_size:
                         raise HopsuSyntaxError(
@@ -263,7 +263,7 @@ class Hopsu:
                     case ")":
                         if len(self.stack) != jump[index][1]:
                             index = jump[index][0]
-                    case _ if isnumber(token):
+                    case _ if is_ascii_digit(token):
                         self.push(int(token))
 
                 index += 1
